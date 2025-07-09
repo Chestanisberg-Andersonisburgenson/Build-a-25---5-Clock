@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 function App() {
@@ -17,6 +17,82 @@ function App() {
     );
   }
 
+  // Default state values
+  const defaultBreakLength = 5;
+  const defaultSessionLength = 25;
+  const defaultTimeLeft = defaultSessionLength * 60;
+  const defaultIsRunning = false;
+  // State variables
+  const [breakLength, setBreakLength] = useState(5);
+  const [sessionLength, setSessionLength] = useState(25);
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [isRunning, setIsRunning] = useState(false);
+
+  // Button handlers
+  const handleBreakIncrement = () => {
+    if (breakLength < 60) {
+      setBreakLength(breakLength + 1);
+    }
+  };
+  const handleBreakDecrement = () => {
+    if (breakLength > 1) {
+      setBreakLength(breakLength - 1);
+    }
+  };
+
+  const handleSessionIncrement = () => {
+    if (sessionLength < 60) {
+      setSessionLength(sessionLength + 1);
+      if (!isRunning) {
+        setTimeLeft((sessionLength + 1) * 60);
+      }
+    }
+  };
+
+  const handleSessionDecrement = () => {
+    if (sessionLength > 1) {
+      setSessionLength(sessionLength - 1);
+      if (!isRunning) {
+        setTimeLeft((sessionLength - 1) * 60);
+      }
+    }
+  };
+
+  const timerFormat = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  // Start/Stop button handler logic
+  useEffect(() => {
+    if (isRunning) {
+      const timer = setInterval(() => {
+        setTimeLeft(prevTime => {
+          if (prevTime <= 0) {
+            setIsRunning(false);
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isRunning]);
+
+  const handleStartStop = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handleReset = () => {
+    setBreakLength(defaultBreakLength);
+    setSessionLength(defaultSessionLength);
+    setTimeLeft(defaultTimeLeft);
+    setIsRunning(defaultIsRunning);
+  };
+
+  //End of button handlers
 
   return (
     <div id="app">
@@ -27,30 +103,30 @@ function App() {
         <div id="break-controls">
           <p id="break-label">Break Length</p>
           <div className="arrow-controls">
-            <button id="break-decrement">⬇</button>
-            <span id="break-length">5</span>
-            <button id="break-increment">⬆</button>
+            <button id="break-decrement" onClick={handleBreakDecrement}>⬇</button>
+            <span id="break-length">{breakLength}</span>
+            <button id="break-increment" onClick={handleBreakIncrement}>⬆</button>
           </div>
         </div>
 
         <div id="session-controls">
           <p id="session-label">Session Length</p>
           <div className="arrow-controls">
-            <button id="session-decrement">⬇</button>
-            <span id="session-length">25</span>
-            <button id="session-increment">⬆</button>
+            <button id="session-decrement" onClick={handleSessionDecrement}>⬇</button>
+            <span id="session-length">{sessionLength}</span>
+            <button id="session-increment" onClick={handleSessionIncrement}>⬆</button>
           </div>
         </div>          
       </div>
 
         <div id="time-box">
           <p id="timer-label">Session</p>
-          <p id="time-left">25:00</p>
+          <p id="time-left">{timerFormat(timeLeft)}</p>
         </div>        
 
       <div id="controls">
-        <button id="start_stop">⏯</button>        
-        <button id="reset"><RefreshIcon/></button>
+        <button id="start_stop" onClick={handleStartStop}>⏯</button>        
+        <button id="reset" onClick={handleReset}><RefreshIcon/></button>
       </div>
     </div>
 
