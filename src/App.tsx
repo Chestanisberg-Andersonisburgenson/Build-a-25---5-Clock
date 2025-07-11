@@ -22,11 +22,15 @@ function App() {
   const defaultSessionLength = 25;
   const defaultTimeLeft = defaultSessionLength * 60;
   const defaultIsRunning = false;
+  const defaultOnBreak = false;
   // State variables
   const [breakLength, setBreakLength] = useState(defaultBreakLength);
   const [sessionLength, setSessionLength] = useState(defaultSessionLength);
   const [timeLeft, setTimeLeft] = useState(defaultTimeLeft);
   const [isRunning, setIsRunning] = useState(defaultIsRunning);
+  const [onBreak, setOnBreak] = useState(defaultOnBreak);
+
+  const timerLabel = onBreak ? "Break" : "Session";
   
   const timerFormat = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -63,27 +67,32 @@ function App() {
     }
   };
 
-
+  
   // Start/Stop button handler logic
-  useEffect(() => {
-    if (isRunning) {
-      const timer = setInterval(() => {
-        setTimeLeft(prevTime => {
-          if (prevTime <= 0) {
-            setIsRunning(false);
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isRunning]);
-
   const handleStartStop = () => {
     setIsRunning(!isRunning);
   };
+
+  useEffect(() => {
+  if (!isRunning) return;
+
+  const timer = setInterval(() => {
+    setTimeLeft(prev => prev - 1);
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [isRunning]);
+
+useEffect(() => {
+  if (timeLeft < 0) return; // sanity check
+  if (timeLeft === 0) {
+    const nextIsBreak = !onBreak;
+    setOnBreak(nextIsBreak);
+    setTimeLeft(nextIsBreak ? breakLength * 60 : sessionLength * 60);
+  }
+}, [timeLeft]);
+
+
 
   const handleReset = () => {
     setBreakLength(defaultBreakLength);
@@ -120,7 +129,7 @@ function App() {
       </div>
 
         <div id="time-box">
-          <p id="timer-label">Session</p>
+          <p id="timer-label">{timerLabel}</p>
           <p id="time-left">{timerFormat(timeLeft)}</p>
         </div>        
 
