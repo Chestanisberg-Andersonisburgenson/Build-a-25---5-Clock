@@ -23,11 +23,16 @@ function App() {
   const defaultTimeLeft = defaultSessionLength * 60;
   const defaultIsRunning = false;
   // State variables
-  const [breakLength, setBreakLength] = useState(5);
-  const [sessionLength, setSessionLength] = useState(25);
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isRunning, setIsRunning] = useState(false);
-
+  const [breakLength, setBreakLength] = useState(defaultBreakLength);
+  const [sessionLength, setSessionLength] = useState(defaultSessionLength);
+  const [timeLeft, setTimeLeft] = useState(defaultTimeLeft);
+  const [isRunning, setIsRunning] = useState(defaultIsRunning);
+  
+  const timerFormat = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
   // Button handlers
   const handleBreakIncrement = () => {
     if (breakLength < 60) {
@@ -58,11 +63,6 @@ function App() {
     }
   };
 
-  const timerFormat = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
 
   // Start/Stop button handler logic
   useEffect(() => {
