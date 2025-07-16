@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import './App.css'
 
 function App() {
@@ -66,7 +66,14 @@ function App() {
       }
     }
   };
-
+  
+  const alarmSoundRef = useRef<HTMLAudioElement>(null);
+  useEffect(() => {
+    if (timeLeft === 0) {
+      alarmSoundRef.current &&  (alarmSoundRef.current.currentTime = 0);
+      alarmSoundRef.current?.play();
+    }
+  }, [timeLeft]);
   
   // Start/Stop button handler logic
   const handleStartStop = () => {
@@ -74,23 +81,25 @@ function App() {
   };
 
   useEffect(() => {
-  if (!isRunning) return;
+  if (!isRunning || timeLeft === 0) return;
 
   const timer = setInterval(() => {
     setTimeLeft(prev => prev - 1);
   }, 1000);
 
   return () => clearInterval(timer);
-}, [isRunning]);
+}, [isRunning, timeLeft]);
 
 useEffect(() => {
-  if (timeLeft < 0) return; // sanity check
-  if (timeLeft === 0) {
-    const nextIsBreak = !onBreak;
-    setOnBreak(nextIsBreak);
-    setTimeLeft(nextIsBreak ? breakLength * 60 : sessionLength * 60);
+  if ( timeLeft === 0) {
+    const timeout = setTimeout(() => {  
+      const nextIsBreak = !onBreak;
+      setOnBreak(nextIsBreak);
+      setTimeLeft(nextIsBreak ? breakLength * 60 : sessionLength * 60);
+    }, 1000);
+    return () => clearTimeout(timeout);
   }
-}, [timeLeft]);
+}, [timeLeft, onBreak, breakLength, sessionLength]);
 
 
 
@@ -99,7 +108,11 @@ useEffect(() => {
     setSessionLength(defaultSessionLength);
     setTimeLeft(defaultTimeLeft);
     setIsRunning(defaultIsRunning);
+    setOnBreak(defaultOnBreak);
+    alarmSoundRef.current?.pause();
+    alarmSoundRef.current &&  (alarmSoundRef.current.currentTime = 0);
   };
+
 
   //End of button handlers
 
@@ -137,6 +150,13 @@ useEffect(() => {
         <button id="start_stop" onClick={handleStartStop}>⏯</button>        
         <button id="reset" onClick={handleReset}><RefreshIcon/></button>
       </div>
+
+      <audio id="beep"
+      ref={alarmSoundRef}
+      src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav" 
+      preload="auto">
+      </audio>
+
     </div>
 
 )
